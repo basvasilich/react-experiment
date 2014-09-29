@@ -1,0 +1,51 @@
+{
+    "author": {
+        "name": "Vadim Patsev",
+        "email": "basvasilich@yandex.ru",
+        "url": "https://github.com/basvasilich"
+    },
+    "name": "podio-experiment",
+    "description": "",
+    "version": "0.0.1",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:basvasilich/podio-experiment.git"
+    },
+    "private": true,
+    "devDependencies": {
+        "jscs": "*",
+        "karma": "*",
+        "karma-firefox-launcher": "*",
+        "karma-mocha": "*",
+        "karma-phantomjs-launcher": "*",
+        "karma-sinon-expect": "*",
+        "casperjs": "*",
+        "mocha": "*",
+        "sinon": "*",
+        "expect.js": "*"
+    },
+    "dependencies": {
+        "borschik": "^1.1.0",
+        "bower": "*",
+        "grunt": "^0.4.5",
+        "grunt-borschik": "^1.0.0",
+        "grunt-browserify": "^2.1.4",
+        "grunt-casper": "^0.3.10",
+        "grunt-cli": "*",
+        "grunt-contrib-clean": "^0.6.0",
+        "grunt-contrib-jshint": "*",
+        "grunt-contrib-watch": "*",
+        "grunt-csso": "^0.6.3",
+        "grunt-jscs": "*",
+        "grunt-karma": "*",
+        "grunt-autoprefixer": "^0.8.x",
+        "load-grunt-tasks": "*"
+    },
+    "engines": {
+        "node": "0.10.*"
+    },
+    "scripts": {
+        "test": "grunt test",
+        "postinstall": "./node_modules/bower/bin/bower install && ./node_modules/grunt-cli/bin/grunt"
+    }
+}
