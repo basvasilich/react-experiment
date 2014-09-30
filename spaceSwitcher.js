@@ -3,10 +3,28 @@ var spaceSwitcher = React.createClass({displayName: 'spaceSwitcher',
     getInitialState: function() {
         return {data: []};
     },
+    makeIndex: function(data) {
+        var q = [].concat(data);
+        var index = [];
+        while (q.length) {
+            var item = q.shift();
+            index.push({
+                name: item.name,
+                ref: item
+            })
+            if (item.spaces) {
+                item.spaces.forEach(function(item) {
+                    q.push(item)
+                })
+            }
+
+        }
+        return index;
+    },
     componentDidMount: function() {
         var that = this;
         app.getJSON(that.props.url, function(data) {
-            that.setState({data: data});
+            that.setState({data: data, index: that.makeIndex(data)});
         })
     },
     onUpdate: function(data) {
@@ -15,11 +33,10 @@ var spaceSwitcher = React.createClass({displayName: 'spaceSwitcher',
         });
     },
     render: function() {
-        console.log('state', this.state.data)
         return (
             <div className="space-switcher">
             Hello, world! I am a spaceSwitcher.
-                <spaceSwitcherForm  onUpdate={ this.onUpdate }/>
+                <spaceSwitcherForm state={ this.state } onUpdate={ this.onUpdate }/>
                 <spaceSwitcherList data={ this.state.data } />
             </div>
             );
@@ -27,13 +44,50 @@ var spaceSwitcher = React.createClass({displayName: 'spaceSwitcher',
 });
 
 var spaceSwitcherForm = React.createClass({displayName: 'spaceSwitcherForm',
+    getInitialState: function() {
+        return {
+            prevInput: '',
+            prevScope: []
+        };
+    },
+
     handleInput: function(e) {
         e.preventDefault();
+        var scope = [];
         var input = this.refs.spaceSwitcherSearchText.getDOMNode().value.trim();
-        console.log(input)
-        if (!input) {
-            return;
+        this.state.prevSearch;
+
+        var stringIndex = function(name, input) {
+            var name = name.toLowerCase();
+            return input ? name.indexOf(input.toLowerCase()) : -1;
         }
+
+        this.state.prevScope.forEach(function(item) {
+            delete item.ref.isSearchResult;
+            delete item.ref.searchName;
+        })
+
+        if (input && input.indexOf(this.state.prevInput) === 0 && this.state.prevInput !== "") {
+            scope = this.state.prevScope.filter(function(item) {
+                return stringIndex(item.name, input) != -1;
+            })
+        } else {
+            scope = this.props.state.index
+        }
+
+        scope.forEach(function(item) {
+            console.log(input, item)
+            var i = stringIndex(item.name, input);
+
+            if (i != -1) {
+                item.ref.isSearchResult = true;
+                item.ref.searchName = item.name.splice(i, 0, '<b>').splice(i + input.length + 3, 0, '</b>')
+            }
+        })
+
+        this.props.onUpdate(this.props.state.data);
+        this.state.prevInput = input;
+        this.state.prevScope = scope;
     },
     render: function() {
         return (
@@ -68,15 +122,12 @@ var spaceSwitcherOrganisation = React.createClass({displayName: 'spaceSwitcherOr
                 );
         });
 
-        var selection = org.isSearchResult ? '+ ' : '';
+        var name = org.isSearchResult ? org.searchName : org.name;
         return (
 
             <div className="space-switcher__organisation">
 
-                <div className="space-switcher__organisation-title">
-                    {selection}
-                    {org.name}
-                </div>
+                <div dangerouslySetInnerHTML={{__html: name}} className="space-switcher__organisation-title"></div>
                 <div className="space-switcher__spaces">
                     {organisationSpacesNode}
                 </div>
@@ -88,11 +139,13 @@ var spaceSwitcherOrganisation = React.createClass({displayName: 'spaceSwitcherOr
 var spaceSwitcherSpace = React.createClass({displayName: 'spaceSwitcherSpace',
     render: function() {
         var space = this.props.data;
+
+        var name = space.isSearchResult ? space.searchName : space.name;
+
+        console.log(space.searchName)
         return (
             <div className="space-switcher__space">
-                <a href={ space.url } className="space-switcher__space-title">
-                    { space.name }
-                </a>
+                <a dangerouslySetInnerHTML={{__html: name}} href={ space.url } className="space-switcher__space-title"></a>
             </div>
             );
     }
@@ -116,9 +169,13 @@ var app = {
             }
         };
         xhr.send();
-    }
+    },
+
 }
 
+String.prototype.splice = function(idx, rem, s) {
+    return (this.slice(0, idx) + s + this.slice(idx + Math.abs(rem)));
+};
 
 React.renderComponent(
     <spaceSwitcher  url="data.json"/>,
