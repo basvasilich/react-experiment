@@ -1,7 +1,10 @@
 /** @jsx React.DOM */
 var spaceSwitcher = React.createClass({displayName: 'spaceSwitcher',
     getInitialState: function() {
-        return {data: []};
+        return {
+            data: [],
+            active: -1
+        };
     },
     makeIndex: function(data) {
         var q = [].concat(data);
@@ -13,31 +16,63 @@ var spaceSwitcher = React.createClass({displayName: 'spaceSwitcher',
                 ref: item
             })
             if (item.spaces) {
-                item.spaces.forEach(function(item) {
-                    q.push(item)
-                })
+                for (var i = item.spaces.length; i > 0; i--) {
+                    q.unshift(item.spaces[i - 1]);
+                }
             }
 
         }
         return index;
+    },
+    handleKeyDown: function(e) {
+        if (e.keyCode == 40) {
+            this.activeNext();
+        } else if (e.keyCode == 38) {
+            this.activePrev();
+        }
+    },
+    activeNext: function() {
+        var index = this.state.index;
+        var active = this.state.active;
+
+        if (active < index.length - 1) {
+            index[active + 1].ref.active = true;
+            if (active >= 0) {
+                delete index[active].ref.active;
+            }
+            active++;
+            this.setState({ active: active, index: index});
+        }
+    },
+    activePrev: function() {
+        var index = this.state.index;
+        var active = this.state.active;
+        if (active > 0) {
+            index[active - 1].ref.active = true;
+            if (active <= index.length) {
+                delete index[active].ref.active;
+            }
+            active--;
+            this.setState({ active: active, index: index});
+        }
     },
     componentDidMount: function() {
         var that = this;
         app.getJSON(that.props.url, function(data) {
             that.setState({data: data, index: that.makeIndex(data)});
         })
+        window.addEventListener('keydown', this.handleKeyDown);
+
     },
     onUpdate: function(data) {
-        this.setState({
-            data: data
-        });
+        this.setState(data);
     },
     render: function() {
         return (
             <div className="space-switcher">
             Hello, world! I am a spaceSwitcher.
                 <spaceSwitcherForm state={ this.state } onUpdate={ this.onUpdate }/>
-                <spaceSwitcherList data={ this.state.data } />
+                <spaceSwitcherList state={ this.state } />
             </div>
             );
     }
@@ -76,7 +111,6 @@ var spaceSwitcherForm = React.createClass({displayName: 'spaceSwitcherForm',
         }
 
         scope.forEach(function(item) {
-            console.log(input, item)
             var i = stringIndex(item.name, input);
 
             if (i != -1) {
@@ -85,7 +119,7 @@ var spaceSwitcherForm = React.createClass({displayName: 'spaceSwitcherForm',
             }
         })
 
-        this.props.onUpdate(this.props.state.data);
+        this.props.onUpdate({data: this.props.state.data, index: this.props.state.index, input: input});
         this.state.prevInput = input;
         this.state.prevScope = scope;
     },
@@ -100,9 +134,10 @@ var spaceSwitcherForm = React.createClass({displayName: 'spaceSwitcherForm',
 
 var spaceSwitcherList = React.createClass({displayName: 'spaceSwitcherList',
     render: function() {
-        var organisationsNode = this.props.data.map(function(data) {
+        var input = this.props.state.input;
+        var organisationsNode = this.props.state.data.map(function(data) {
             return (
-                <spaceSwitcherOrganisation data={data} />
+                <spaceSwitcherOrganisation input={input} data={data} />
                 );
         });
         return (
@@ -122,10 +157,33 @@ var spaceSwitcherOrganisation = React.createClass({displayName: 'spaceSwitcherOr
                 );
         });
 
+        var checkInnerResults = function(array) {
+            for (var i = 0; i < array.length; i++) {
+                if (array[i].isSearchResult) {
+                    return true;
+                }
+                return false;
+            }
+        }
+
         var name = org.isSearchResult ? org.searchName : org.name;
+        var className = 'space-switcher__organisation';
+
+
+        if (org.active) {
+            className += '  active'
+        }
+
+        console.log(checkInnerResults(org.spaces))
+
+        if (this.props.input && !org.isSearchResult && !checkInnerResults(org.spaces)) {
+            className += '  hidden'
+        }
+
+
         return (
 
-            <div className="space-switcher__organisation">
+            <div className={className}>
 
                 <div dangerouslySetInnerHTML={{__html: name}} className="space-switcher__organisation-title"></div>
                 <div className="space-switcher__spaces">
@@ -141,10 +199,9 @@ var spaceSwitcherSpace = React.createClass({displayName: 'spaceSwitcherSpace',
         var space = this.props.data;
 
         var name = space.isSearchResult ? space.searchName : space.name;
-
-        console.log(space.searchName)
+        var className = space.active ? 'space-switcher__space active' : 'space-switcher__space ';
         return (
-            <div className="space-switcher__space">
+            <div  className={className}>
                 <a dangerouslySetInnerHTML={{__html: name}} href={ space.url } className="space-switcher__space-title"></a>
             </div>
             );
@@ -176,6 +233,38 @@ var app = {
 String.prototype.splice = function(idx, rem, s) {
     return (this.slice(0, idx) + s + this.slice(idx + Math.abs(rem)));
 };
+
+if (![].contains) {
+    Object.defineProperty(Array.prototype, "contains", {
+        enumerable: false,
+        configurable: true,
+        writable: true,
+        value: function(searchElement/*, fromIndex*/) {
+            if (this === undefined || this === null)
+                throw new TypeError("Cannot convert this value to object");
+            var O = Object(this);
+            var len = parseInt(O.length) || 0;
+            if (len === 0) return false;
+            var n = parseInt(arguments[1]) || 0;
+            if (n >= len) return false;
+            var k;
+            if (n >= 0) {
+                k = n;
+            } else {
+                k = len + n;
+                if (k < 0) k = 0;
+            }
+            while (k < len) {
+                var currentElement = O[k];
+                if (searchElement === currentElement ||
+                    searchElement !== searchElement && currentElement !== currentElement)
+                    return true;
+                k++;
+            }
+            return false;
+        }
+    });
+}
 
 React.renderComponent(
     <spaceSwitcher  url="data.json"/>,
