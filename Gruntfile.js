@@ -63,8 +63,7 @@ module.exports = function(grunt) {
     ]);
 
     grunt.registerTask("test", [
-        "codestyle",
-        "jest"
+        "codestyle"
     ]);
 
     grunt.registerTask('default', [
