@@ -1,6 +1,6 @@
 react-experiment
 ================
-###[http://basvasilich.github.io/react-experiment/](Demo)
+###[Demo](http://basvasilich.github.io/react-experiment/)
 
 I've used only Reactjs for that control. No jquery, only vanilla.
 
