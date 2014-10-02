@@ -1,13 +1,8 @@
 {
     "name": "podio-experiment",
     "version": "0.0.1",
-    "ignore": [
-        ".jshintrc"
-    ],
     "dependencies": {
-        "jquery": "1.11",
-        "react": "*",
-        "underscore": "*"
+        "react": "*"
     },
     "private": true
 }

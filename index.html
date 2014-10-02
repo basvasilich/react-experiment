@@ -3,26 +3,76 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title>spaceSwitcher demo</title>
-    <script src="bower_components/react/react.js"></script>
-    <script src="bower_components/react/JSXTransformer.js"></script>
-    <script type="text/jsx" src="spaceSwitcher.js"></script>
+    <link rel="stylesheet" href="src/spaceSwitcher-with-prefixes.css" type="text/css"/>
+
     <style>
-        .active {
-            background-color: #e7e7e7;
+        body {
+            font-family: sans-serif;
         }
+
+        .header {
+            line-height: 2rem;
+            background-color: #4a96ba;
+        }
+
+        .header__item {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            line-height: 2rem;
+        }
+
     </style>
 </head>
 <body>
 <div class="app">
     <div class="header">
-        <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#">Go to space</a></li>
-            <li><a href="#">App store</a></li>
-        </ul>
+        <div class="header__item"><a class="header__a" href="#">Home</a></div>
+        <div class="header__item">
+            <div id="spaceSwitcher">
+                <a class="header__a space-switcher__toggler" href="#">Go to space</a>
+            </div>
+        </div>
+        <div class="header__item"><a class="header__a" href="#">App store</a></div>
     </div>
-    <div component="spaceSwitcher"></div>
 </div>
+<script src="bower_components/react/react.min.js"></script>
+<script src="src/spaceSwitcher.js"></script>
+<script>
+    String.prototype.splice = function(idx, rem, s) {
+        return (this.slice(0, idx) + s + this.slice(idx + Math.abs(rem)));
+    };
 
+    app.getJSON = function(url, successHandler, errorHandler) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('get', url, true);
+        xhr.onreadystatechange = function() {
+            var status;
+            var data;
+            if (xhr.readyState == 4) {
+                status = xhr.status;
+                if (status == 200) {
+                    data = JSON.parse(xhr.responseText);
+                    if (successHandler) {
+                        successHandler(data);
+                    }
+                } else {
+                    if (errorHandler) {
+                        errorHandler(status);
+                    }
+                }
+            }
+        };
+        xhr.send();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        app.getJSON("data.json", function(data) {
+            React.renderComponent(
+                    app.spaceSwitcher({data: data}),
+                    document.querySelector('#spaceSwitcher')
+            );
+        });
+    }, false);
+</script>
 </body>
 </html>
